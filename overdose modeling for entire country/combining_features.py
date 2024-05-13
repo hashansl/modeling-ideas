@@ -12,8 +12,8 @@ fips_codes = get_files('/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for
 # get the folder names to a list without the folders that start with '.'
 variables = [f for f in os.listdir('/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy') if not f.startswith('.')]
 
-# print(variables)
-# print(len(fips_codes))
+# # print(variables)
+# # print(len(fips_codes))
 
 for fips_code in fips_codes:
     print(f'Processing {fips_code}')
@@ -36,5 +36,7 @@ for fips_code in fips_codes:
     #combined_matrix = np.stack((peristence_image_1, peristence_image_2, peristence_image_3, peristence_image_4, peristence_image_5), axis=-1)
     combined_matrix = np.stack((peristence_image_1, peristence_image_4, peristence_image_5), axis=-1)
 
+    fips_code_int = int(fips_code)
+
     # save the persistence image
-    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 3 channels/{fips_code}', combined_matrix)
+    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 3 channels/{fips_code_int}', combined_matrix)

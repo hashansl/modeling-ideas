@@ -14,10 +14,11 @@ import torchvision.transforms as transforms  # Transformations we can perform on
 from torchvision.transforms import ToPILImage
 
 
+
 class data_loader_persistence_img(Dataset):
 
     def __init__(self,annotation_file_path,root_dir,transform=None):
-        self.annotations = gpd.read_file(annotation_file_path)
+        self.annotations = pd.read_csv(annotation_file_path)
         self.root_dir = root_dir
         self.transform = transform
         self.class_names = sorted(self.annotations['percentile'].unique())
@@ -27,7 +28,7 @@ class data_loader_persistence_img(Dataset):
         return len(self.annotations)
 
     def __getitem__(self,index):
-        npy_file_path = os.path.join(self.root_dir, self.annotations.iloc[index,4] + '.npy')
+        npy_file_path = os.path.join(self.root_dir, str(self.annotations.iloc[index,0]) + '.npy')
 
         img = np.load(npy_file_path)
         img = self.to_pil(img)

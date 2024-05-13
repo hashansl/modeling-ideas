@@ -44,7 +44,7 @@ for state in states:
 
         state_overdose['Narcotic Overdose Mortality Rate 2018'] = state_overdose['Narcotic Overdose Mortality Rate 2018'].astype(float)
 
-        state_overdose['percentile'] = pd.qcut(state_overdose['Narcotic Overdose Mortality Rate 2018'], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=['<20%', '20%-40%', '40%-60%', '60%-80%', '>80%'])
+        state_overdose['percentile'] = pd.qcut(state_overdose['Narcotic Overdose Mortality Rate 2018'], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=['0', '1', '2', '3', '4'])
 
         # reset the index
         state_svi.reset_index(drop=True, inplace=True)
