@@ -11,16 +11,16 @@ from torchvision import transforms
 from timeit import default_timer as timer 
 
 # Setup hyperparameters
-NUM_EPOCHS = 10
-BATCH_SIZE = 16
-HIDDEN_UNITS = 40
-LEARNING_RATE = 0.0000001
+NUM_EPOCHS = 50
+BATCH_SIZE = 64
+HIDDEN_UNITS = 20
+LEARNING_RATE = 0.0001
 
 
 #going modular/data/pizza_steak_sushi/train
 # Setup directories
-root_dir = "/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/data/data/tennessee/2018/percentiles/H0H1-3 channels"
-annotation_file_path = "/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/data/data/tennessee/2018/SVI2018 TN counties with death rate HepVu/SVI2018_TN_counties_with_death_rate_HepVu.shp"
+root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 3 channels"
+annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
 
 # Setup target device
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -70,6 +70,6 @@ print(f"Total training time: {end_time-start_time:.3f} seconds")
 loss_and_accuracy_curve_plotter.plot_loss_curves(results)
 
 # Save the model with help from utils.py
-utils.save_model(model=model,
-                 target_dir="/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/models",
-                 model_name="05_going_modular_script_mode_tinyvgg_model.pth")
+# utils.save_model(model=model,
+#                  target_dir="/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/models",
+#                  model_name="05_going_modular_script_mode_tinyvgg_model.pth")
