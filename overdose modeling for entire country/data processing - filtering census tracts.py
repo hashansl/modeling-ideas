@@ -15,6 +15,9 @@ us_svi = gpd.read_file('/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for
 # get unique State Abbreviations to a list
 states = us_svi['ST_ABBR'].unique()
 
+# drop the "DC", because it is not a state
+states = states[states != 'DC']
+
 # print('Number of states:', len(states))
 
 # importing the overdose with county information
@@ -36,32 +39,64 @@ overdose_df['GEO ID'] = overdose_df['GEO ID'].apply(lambda x: x.zfill(5))
 for state in states:
     print('Processing:', state)
     try:
-        # filter the census tracts for each state
-        state_svi = us_svi[us_svi['ST_ABBR'] == state]
+        if state != 'AK':
+            # filter the census tracts for each state
+            state_svi = us_svi[us_svi['ST_ABBR'] == state]
 
-        # filter by State Abbreviation	
-        state_overdose = overdose_df[overdose_df['State Abbreviation'] == state]
+            # filter by State Abbreviation	
+            state_overdose = overdose_df[overdose_df['State Abbreviation'] == state]
 
-        state_overdose['Narcotic Overdose Mortality Rate 2018'] = state_overdose['Narcotic Overdose Mortality Rate 2018'].astype(float)
+            state_overdose['Narcotic Overdose Mortality Rate 2018'] = state_overdose['Narcotic Overdose Mortality Rate 2018'].astype(float)
 
-        state_overdose['percentile'] = pd.qcut(state_overdose['Narcotic Overdose Mortality Rate 2018'], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=['0', '1', '2', '3', '4'])
+            state_overdose['percentile'] = pd.qcut(state_overdose['Narcotic Overdose Mortality Rate 2018'], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=['0', '1', '2', '3', '4'])
 
-        # reset the index
-        state_svi.reset_index(drop=True, inplace=True)
+            # reset the index
+            state_svi.reset_index(drop=True, inplace=True)
 
-        # merge the two dataframes
-        merged_df = pd.merge(state_svi, state_overdose[['GEO ID','percentile']], left_on='STCNTY', right_on='GEO ID', how='left')
+            # merge the two dataframes
+            merged_df = pd.merge(state_svi, state_overdose[['GEO ID','percentile']], left_on='STCNTY', right_on='GEO ID', how='left')
 
-        # drop GEO ID column
-        merged_df.drop(columns=['GEO ID'], inplace=True)
+            # drop GEO ID column
+            merged_df.drop(columns=['GEO ID'], inplace=True)
 
-        # Convert the DataFrame to a GeoDataFrame
-        gdf = gpd.GeoDataFrame(merged_df, geometry='geometry')
+            # Convert the DataFrame to a GeoDataFrame
+            gdf = gpd.GeoDataFrame(merged_df, geometry='geometry')
 
-        gdf['percentile'] = gdf['percentile'].astype(str)
+            gdf['percentile'] = gdf['percentile'].astype(str)
 
-        # Save the GeoDataFrame to a Shapefile
-        gdf.to_file(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/SVI2018 census tracts with death rate HepVu-5 classes/{state}/{state}.shp", driver='ESRI Shapefile')
+            # Save the GeoDataFrame to a Shapefile
+            gdf.to_file(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/SVI2018 census tracts with death rate HepVu-5 classes/{state}/{state}.shp", driver='ESRI Shapefile')
+        else:
+            # filter the census tracts for each state
+            state_svi = us_svi[us_svi['ST_ABBR'] == state]
+
+            # filter by State Abbreviation	
+            state_overdose = overdose_df[overdose_df['State Abbreviation'] == state]
+
+            state_overdose['Narcotic Overdose Mortality Rate 2018'] = state_overdose['Narcotic Overdose Mortality Rate 2018'].astype(float)
+
+            # Add a small random noise to handle duplicate edges
+            state_overdose['Narcotic Overdose Mortality Rate 2018'] += np.random.normal(0, 1e-5, state_overdose.shape[0])
+
+            state_overdose['percentile'] = pd.qcut(state_overdose['Narcotic Overdose Mortality Rate 2018'], q=[0, 0.2, 0.4, 0.6, 0.8, 1], labels=['0', '1', '2', '3', '4'])
+
+            # reset the index
+            state_svi.reset_index(drop=True, inplace=True)
+
+            # merge the two dataframes
+            merged_df = pd.merge(state_svi, state_overdose[['GEO ID','percentile']], left_on='STCNTY', right_on='GEO ID', how='left')
+
+            # drop GEO ID column
+            merged_df.drop(columns=['GEO ID'], inplace=True)
+
+            # Convert the DataFrame to a GeoDataFrame
+            gdf = gpd.GeoDataFrame(merged_df, geometry='geometry')
+
+            gdf['percentile'] = gdf['percentile'].astype(str)
+
+            # Save the GeoDataFrame to a Shapefile
+            gdf.to_file(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/SVI2018 census tracts with death rate HepVu-5 classes/{state}/{state}.shp", driver='ESRI Shapefile')
+
     except Exception as e:
         print(f"Error processing {state}: {e}")
         continue  # Continue to the next iteration if an error occurs
