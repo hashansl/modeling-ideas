@@ -13,8 +13,8 @@ from timeit import default_timer as timer
 # Setup hyperparameters
 NUM_EPOCHS = 50
 BATCH_SIZE = 64
-HIDDEN_UNITS = 20
-LEARNING_RATE = 0.0001
+HIDDEN_UNITS = 512
+LEARNING_RATE = 0.000001
 
 
 #going modular/data/pizza_steak_sushi/train
