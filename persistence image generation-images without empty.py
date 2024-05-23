@@ -3,6 +3,7 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import os
+import traceback
 
 from ripser import Rips
 from persim import PersistenceImager
@@ -27,15 +28,22 @@ variables = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','E
 
 for variable in variables:
     # create a folder for each state if it does not exist
-    os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{variable}", exist_ok=True)
+    os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/images 16 channels/{variable}", exist_ok=True)
 print('Done creating folders for each variable')
 
 # print('Number of states:', len(states))
 # print(states)
 
+
+empty_points_to_compute_persistence_image = {}
+no_persitence_data_points = {}
+
 # loop through each state
 for state in tqdm(states, desc="Processing states"):
     print('Processing:', state)
+
+    empty_points_to_compute_persistence_image_counter = 0
+    no_persitence_data_points_counter = 0
 
     try:
         # load the dictonary into a dictionary from the pkl files
@@ -97,28 +105,37 @@ for state in tqdm(states, desc="Processing states"):
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
                         C_rotated = np.rot90(image_h1, k=1) 
 
-                        # plt.figure(figsize=(2.4, 2.4))
-                        # plt.imshow(C_rotated, cmap='viridis')  # Assuming 'viridis' colormap, change as needed
-                        # plt.axis('off')  # Turn off axis
+                        plt.figure(figsize=(2.4, 2.4))
+                        plt.imshow(C_rotated, cmap='viridis')  # Assuming 'viridis' colormap, change as needed
+                        plt.axis('off')  # Turn off axis
                         # # tennessee/results/persistence images/percentiles/below 75/png
-                        # plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Adjust subplot parameters to remove borders
+                        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Adjust subplot parameters to remove borders
                         
-                        # plt.savefig(f'./results/persistence images/percentiles/below 90/h1/png/{key}/' + fips +'.png')
+                        plt.savefig(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/images 16 channels/{key}/' + fips +'.png')
                         # plt.show()
                         # plt.close()
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                        # np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
                     else:
-                        empty_image = np.zeros((310, 310))
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+                        no_persitence_data_points_counter = no_persitence_data_points_counter + 1
+                        # empty_image = np.zeros((310, 310))
+                        # np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
                         # no_persitence_data_points.append(fips)
                 else:
+                    empty_points_to_compute_persistence_image_counter = empty_points_to_compute_persistence_image_counter + 1
                     # no_data_points_to_compute_persistence_image.append(fips)
-                    empty_image = np.zeros((310, 310))
-                    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+                    # empty_image = np.zeros((310, 310))
+                    # np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+        no_persitence_data_points[state] = no_persitence_data_points_counter
+        empty_points_to_compute_persistence_image[state] = empty_points_to_compute_persistence_image_counter
         print('Done processing:', state)
 
     except Exception as e:
         print(f"Error processing {state}: {e}")
+        traceback.print_exc()
+
         continue  # Continue to the next iteration if an error occurs
 
+# for each state, print the number of empty points and no persistence data points
+print(empty_points_to_compute_persistence_image)
+print(no_persitence_data_points)
 print('All states processed.')

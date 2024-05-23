@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import geopandas as gpd
 import pickle as pickle
 from pylab import *
-import os
+import os    
 import numpy as np
 
 import warnings
@@ -44,18 +44,22 @@ states = get_folders('/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for e
 print('Number of states:', len(states))
 print(states)
 
-# for state in states:
-#     # create a folder for each state if it does not exist
-#     os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)/{state}", exist_ok=True)
-
+for state in states:
+    # create a folder for each state if it does not exist
+    os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)- all variables/{state}", exist_ok=True)
+print('Done creating folders for each state')
 
 
 selected_variables = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ','NOD_Rate']
 selected_variables_without_y = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ']
-selected_variables_tn_with_geo = ['FIPS','EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV','NOD_Rate','geometry']
-selected_variables_tn = ['EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV']
-selected_variables_tn_with_od = ['EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV','NOD_Rate']
 
+# selected_variables_for_state_with_geo = ['FIPS','EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV','NOD_Rate','geometry']
+# selected_variables_for_state = ['EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV']
+# selected_variables_tn_with_od = ['EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV','NOD_Rate']
+
+selected_variables_for_state_with_geo = ['FIPS','EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ','NOD_Rate','geometry']
+selected_variables_for_state = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ']
+selected_variables_tn_with_od = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ','NOD_Rate']
 
 
 def generate_adjacent_counties(dataframe,filtration_threshold,variable_name):
@@ -140,39 +144,28 @@ for state in states:
 
     print('Processing:', state)
 
+    # Initialize dictionaries to store the percentiles
+    percentiles_50 = {}
+    percentiles_75 = {}
+    percentiles_90 = {}
+
     try:
 
         svi_od = gpd.read_file(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/SVI2018 census tracts with death rate HepVu-5 classes/{state}/{state}.shp')
 
-        # if value equals -999, replace with 0 in selected_variablesWy_
-        svi_od[selected_variables_tn[0]] = svi_od[selected_variables_tn[0]].replace(-999, 0)
-        svi_od[selected_variables_tn[1]] = svi_od[selected_variables_tn[1]].replace(-999, 0)
-        svi_od[selected_variables_tn[2]] = svi_od[selected_variables_tn[2]].replace(-999, 0)
-        svi_od[selected_variables_tn[3]] = svi_od[selected_variables_tn[3]].replace(-999, 0)
-        svi_od[selected_variables_tn[4]] = svi_od[selected_variables_tn[4]].replace(-999, 0)
+        # Replace -999 with 0 for each variable in selected_variables_for_state
+        for variable in selected_variables_for_state:
+            svi_od[variable] = svi_od[variable].replace(-999, 0)
 
-        # calculate the 50th and 75th and 90th percentile for each variable
-        variable_1_percentile_50 = svi_od[selected_variables_tn[0]].quantile(0.5)
-        variable_1_percentile_75 = svi_od[selected_variables_tn[0]].quantile(0.75)
-        variable_1_percentile_90 = svi_od[selected_variables_tn[0]].quantile(0.9)
 
-        variable_2_percentile_50 = svi_od[selected_variables_tn[1]].quantile(0.5)
-        variable_2_percentile_75 = svi_od[selected_variables_tn[1]].quantile(0.75)
-        variable_2_percentile_90 = svi_od[selected_variables_tn[1]].quantile(0.9)
+        # Calculate the percentiles for each variable
+        for variable in selected_variables_for_state:
+            percentiles_50[variable] = svi_od[variable].quantile(0.5)
+            percentiles_75[variable] = svi_od[variable].quantile(0.75)
+            percentiles_90[variable] = svi_od[variable].quantile(0.9)
 
-        variable_3_percentile_50 = svi_od[selected_variables_tn[2]].quantile(0.5)
-        variable_3_percentile_75 = svi_od[selected_variables_tn[2]].quantile(0.75)
-        variable_3_percentile_90 = svi_od[selected_variables_tn[2]].quantile(0.9)
 
-        variable_4_percentile_50 = svi_od[selected_variables_tn[3]].quantile(0.5)
-        variable_4_percentile_75 = svi_od[selected_variables_tn[3]].quantile(0.75)
-        variable_4_percentile_90 = svi_od[selected_variables_tn[3]].quantile(0.9)
-
-        variable_5_percentile_50 = svi_od[selected_variables_tn[4]].quantile(0.5)
-        variable_5_percentile_75 = svi_od[selected_variables_tn[4]].quantile(0.75)
-        variable_5_percentile_90 = svi_od[selected_variables_tn[4]].quantile(0.9)
-
-        tn_filtered = svi_od[selected_variables_tn_with_geo]
+        tn_filtered = svi_od[selected_variables_for_state_with_geo]
 
         #reset index
         tn_filtered = tn_filtered.reset_index(drop=True)
@@ -182,102 +175,118 @@ for state in states:
         
         #multiple
 
-        selected_variables_and_threshold = {selected_variables_tn[0]: variable_1_percentile_50, selected_variables_tn[1]: variable_2_percentile_50, selected_variables_tn[2]: variable_3_percentile_50, selected_variables_tn[3]: variable_4_percentile_50, selected_variables_tn[4]: variable_5_percentile_50}
         
-        # create a empty dictionary
-        edges_and_traingles_for_each_variable_below_50th_percentile = {}
+        # # Create selected_variables_and_threshold using a loop
+        # selected_variables_and_threshold_percentiles_50 = {}
+        # for variable in selected_variables_for_state:
+        #     selected_variables_and_threshold_percentiles_50[variable] = percentiles_50[variable]
 
-        for variable_name, threshold in selected_variables_and_threshold.items():
+        # # create a empty dictionary
+        # edges_and_traingles_for_each_variable_below_50th_percentile = {}
 
-            # Sorting based on the variable and selecting only the FIPS and the variable columns is important
-            # Also we need to keep  the dataframe sorted based on the variable
+        # for variable_name, threshold in selected_variables_and_threshold_percentiles_50.items():
 
-            df_one_variable = tn_filtered[['FIPS',variable_name, 'geometry']]
+        #     # Sorting based on the variable and selecting only the FIPS and the variable columns is important
+        #     # Also we need to keep  the dataframe sorted based on the variable
 
-            # # Sorting the DataFrame based on the 'rate' column
-            df_one_variable = df_one_variable.sort_values(by=variable_name)
-            df_one_variable['sortedID'] = range(len(df_one_variable))
+        #     df_one_variable = tn_filtered[['FIPS',variable_name, 'geometry']]
 
-            # Convert the DataFrame to a GeoDataFrame
-            df_one_variable = gpd.GeoDataFrame(df_one_variable, geometry='geometry')
-            df_one_variable.crs = "EPSG:3395"  # This is a commonly used projected CRS
+        #     # # Sorting the DataFrame based on the 'rate' column
+        #     df_one_variable = df_one_variable.sort_values(by=variable_name)
+        #     df_one_variable['sortedID'] = range(len(df_one_variable))
+
+        #     # Convert the DataFrame to a GeoDataFrame
+        #     df_one_variable = gpd.GeoDataFrame(df_one_variable, geometry='geometry')
+        #     df_one_variable.crs = "EPSG:3395"  # This is a commonly used projected CRS
 
 
-            # print(df_one_variable.head(100))
+        #     # print(df_one_variable.head(100))
 
-            adjacencies_list,adjacent_counties_df,county_list = generate_adjacent_counties(df_one_variable,threshold,variable_name)
+        #     adjacencies_list,adjacent_counties_df,county_list = generate_adjacent_counties(df_one_variable,threshold,variable_name)
 
-            # create a dictionary adjacent_counties_df column county as key and column adjacent as value(to avoid NULL adjacencies error)
-            adjacent_counties_dict = dict(zip(adjacent_counties_df['county'],adjacent_counties_df['adjacent']))
+        #     # create a dictionary adjacent_counties_df column county as key and column adjacent as value(to avoid NULL adjacencies error)
+        #     adjacent_counties_dict = dict(zip(adjacent_counties_df['county'],adjacent_counties_df['adjacent']))
 
-            # this take only counties that have adjacent counties
-            county_list = adjacent_counties_df['county'].tolist()
+        #     # this take only counties that have adjacent counties
+        #     county_list = adjacent_counties_df['county'].tolist()
 
-            V = form_simplicial_complex(adjacent_counties_dict,county_list)
+        #     V = form_simplicial_complex(adjacent_counties_dict,county_list)
 
-            # This is a new feature that I added to the code. It creates a new list replace the sorted ID with the FIPS on the V list
-            # create a new list replace the sorted ID with the FIPS on the V list
-            V_FIPS = [[df_one_variable.iloc[x]['FIPS'] for x in i] for i in V]
+        #     # This is a new feature that I added to the code. It creates a new list replace the sorted ID with the FIPS on the V list
+        #     # create a new list replace the sorted ID with the FIPS on the V list
+        #     V_FIPS = [[df_one_variable.iloc[x]['FIPS'] for x in i] for i in V]
             
-            #add V list to the edges_and_traingles_for_each_variable dictionary with the key as the variable name
-            edges_and_traingles_for_each_variable_below_50th_percentile[variable_name] = V_FIPS
+        #     #add V list to the edges_and_traingles_for_each_variable dictionary with the key as the variable name
+        #     edges_and_traingles_for_each_variable_below_50th_percentile[variable_name] = V_FIPS
 
-            # # # store the list of images for each variable
-            # # list_img = []
+        #     # # # store the list of images for each variable
+        #     # # list_img = []
 
-            # # plot the simplicial complex
-            print(f"Plotting simplicial complex for {variable_name} variable at threshold {threshold}")
-            # plot_simplicial_complex(df_one_variable,V)
+        #     # # plot the simplicial complex
+        #     print(f"Plotting simplicial complex for {variable_name} variable at threshold {threshold}")
+        #     # plot_simplicial_complex(df_one_variable,V)
 
         
-        selected_variables_and_threshold = {selected_variables_tn[0]: variable_1_percentile_75, selected_variables_tn[1]: variable_2_percentile_75, selected_variables_tn[2]: variable_3_percentile_75, selected_variables_tn[3]: variable_4_percentile_75, selected_variables_tn[4]: variable_5_percentile_75}
-        # create a empty dictionary
-        edges_and_traingles_for_each_variable_below_75th_percentile = {}
+        
+        # # Create selected_variables_and_threshold using a loop
+        # selected_variables_and_threshold_percentiles_75 = {}
+        # for variable in selected_variables_for_state:
+        #     selected_variables_and_threshold_percentiles_75[variable] = percentiles_75[variable]
+        
+        # # create a empty dictionary
+        # edges_and_traingles_for_each_variable_below_75th_percentile = {}
 
-        for variable_name, threshold in selected_variables_and_threshold.items():
+        # for variable_name, threshold in selected_variables_and_threshold_percentiles_75.items():
 
-            # Sorting based on the variable and selecting only the FIPS and the variable columns is important
-            # Also we need to keep  the dataframe sorted based on the variable
+        #     # Sorting based on the variable and selecting only the FIPS and the variable columns is important
+        #     # Also we need to keep  the dataframe sorted based on the variable
 
-            df_one_variable = tn_filtered[['FIPS',variable_name, 'geometry']]
+        #     df_one_variable = tn_filtered[['FIPS',variable_name, 'geometry']]
 
-            # # Sorting the DataFrame based on the 'rate' column
-            df_one_variable = df_one_variable.sort_values(by=variable_name)
-            df_one_variable['sortedID'] = range(len(df_one_variable))
+        #     # # Sorting the DataFrame based on the 'rate' column
+        #     df_one_variable = df_one_variable.sort_values(by=variable_name)
+        #     df_one_variable['sortedID'] = range(len(df_one_variable))
 
-            # Convert the DataFrame to a GeoDataFrame
-            df_one_variable = gpd.GeoDataFrame(df_one_variable, geometry='geometry')
-            df_one_variable.crs = "EPSG:3395"  # This is a commonly used projected CRS
+        #     # Convert the DataFrame to a GeoDataFrame
+        #     df_one_variable = gpd.GeoDataFrame(df_one_variable, geometry='geometry')
+        #     df_one_variable.crs = "EPSG:3395"  # This is a commonly used projected CRS
 
-            adjacencies_list,adjacent_counties_df,county_list = generate_adjacent_counties(df_one_variable,threshold,variable_name)
+        #     adjacencies_list,adjacent_counties_df,county_list = generate_adjacent_counties(df_one_variable,threshold,variable_name)
 
-            # create a dictionary adjacent_counties_df column county as key and column adjacent as value(to avoid NULL adjacencies error)
-            adjacent_counties_dict = dict(zip(adjacent_counties_df['county'],adjacent_counties_df['adjacent']))
+        #     # create a dictionary adjacent_counties_df column county as key and column adjacent as value(to avoid NULL adjacencies error)
+        #     adjacent_counties_dict = dict(zip(adjacent_counties_df['county'],adjacent_counties_df['adjacent']))
 
-            # this take only counties that have adjacent counties
-            county_list = adjacent_counties_df['county'].tolist()
+        #     # this take only counties that have adjacent counties
+        #     county_list = adjacent_counties_df['county'].tolist()
 
-            V = form_simplicial_complex(adjacent_counties_dict,county_list)
+        #     V = form_simplicial_complex(adjacent_counties_dict,county_list)
 
-            # This is a new feature that I added to the code. It creates a new list replace the sorted ID with the FIPS on the V list
-            # create a new list replace the sorted ID with the FIPS on the V list
-            V_FIPS = [[df_one_variable.iloc[x]['FIPS'] for x in i] for i in V]
+        #     # This is a new feature that I added to the code. It creates a new list replace the sorted ID with the FIPS on the V list
+        #     # create a new list replace the sorted ID with the FIPS on the V list
+        #     V_FIPS = [[df_one_variable.iloc[x]['FIPS'] for x in i] for i in V]
 
-            #add V list to the edges_and_traingles_for_each_variable dictionary with the key as the variable name
-            edges_and_traingles_for_each_variable_below_75th_percentile[variable_name] = V_FIPS
+        #     #add V list to the edges_and_traingles_for_each_variable dictionary with the key as the variable name
+        #     edges_and_traingles_for_each_variable_below_75th_percentile[variable_name] = V_FIPS
 
-            # # # store the list of images for each variable
-            # # list_img = []
+        #     # # # store the list of images for each variable
+        #     # # list_img = []
 
-            # # plot the simplicial complex
-            print(f"Plotting simplicial complex for {variable_name} variable at threshold {threshold}")
-            # plot_simplicial_complex(df_one_variable,V)
+        #     # # plot the simplicial complex
+        #     print(f"Plotting simplicial complex for {variable_name} variable at threshold {threshold}")
+        #     # plot_simplicial_complex(df_one_variable,V)
 
-        selected_variables_and_threshold = {selected_variables_tn[0]: variable_1_percentile_90, selected_variables_tn[1]: variable_2_percentile_90, selected_variables_tn[2]: variable_3_percentile_90, selected_variables_tn[3]: variable_4_percentile_90, selected_variables_tn[4]: variable_5_percentile_90}
+        # 90 th percentile ---------------------------------------
+
+        # Create selected_variables_and_threshold using a loop
+        selected_variables_and_threshold_percentiles_90 = {}
+        for variable in selected_variables_for_state:
+            selected_variables_and_threshold_percentiles_90[variable] = percentiles_90[variable]
+        
+        
         # create a empty dictionary
         edges_and_traingles_for_each_variable_below_90th_percentile = {}
 
-        for variable_name, threshold in selected_variables_and_threshold.items():
+        for variable_name, threshold in selected_variables_and_threshold_percentiles_90.items():
 
             # Sorting based on the variable and selecting only the FIPS and the variable columns is important
             # Also we need to keep  the dataframe sorted based on the variable
@@ -317,43 +326,24 @@ for state in states:
             plot_simplicial_complex(df_one_variable,V)
 
 
-        selected_regions_variable_1 = []
-        selected_regions_variable_2 = []
-        selected_regions_variable_3 = []
-        selected_regions_variable_4 = []
-        selected_regions_variable_5 = []
+        ###############################################################################################################################
 
-        # loop through the dictionary and for each variable create a list of edges
+        # Initialize lists to store selected regions for each variable
+        selected_regions = {variable: [] for variable in selected_variables_for_state}
+
+        # Loop through the dictionary and for each variable, create a list of edges
         for variable_name, V_FIPS in edges_and_traingles_for_each_variable_below_90th_percentile.items():
-        # for variable_name, V_FIPS in edges_and_traingles_for_each_variable_below_mean_plus_1sd.items():
-            for set in V_FIPS:
-                if len(set) == 2 or len(set) == 3:
-                    # if variable is EP_DISABL
-                    if variable_name == selected_variables_tn[0]:
-                        #check if the edge(both values) is not already in the list
-                        for vertice in set:
-                            if vertice not in selected_regions_variable_1:
-                                selected_regions_variable_1.append(vertice)
-                    elif variable_name == selected_variables_tn[1]:
-                        for vertice in set:
-                            if vertice not in selected_regions_variable_2:
-                                selected_regions_variable_2.append(vertice)
-                    elif variable_name == selected_variables_tn[2]:
-                        for vertice in set:
-                            if vertice not in selected_regions_variable_3:
-                                selected_regions_variable_3.append(vertice)
-                    elif variable_name == selected_variables_tn[3]:
-                        for vertice in set:
-                            if vertice not in selected_regions_variable_4:
-                                selected_regions_variable_4.append(vertice)
-                    elif variable_name == selected_variables_tn[4]:
-                        for vertice in set:
-                            if vertice not in selected_regions_variable_5:
-                                selected_regions_variable_5.append(vertice)
+            # For each set of vertices in V_FIPS
+            for vertex_set in V_FIPS:
+                if len(vertex_set) in (2, 3):
+                    # Add vertices to the appropriate list if not already present
+                    for vertice in vertex_set:
+                        if vertice not in selected_regions[variable_name]:
+                            selected_regions[variable_name].append(vertice)
         
         
         # this set of variables needed - specially STCNTY to identify the county
-        selected_variables_tn_with_censusinfo = ['FIPS','STCNTY','EP_DISABL', 'EP_NOHSDP', 'EP_PCI', 'EP_MOBILE', 'EP_POV','NOD_Rate','geometry']
+        selected_variables_tn_with_censusinfo = ['FIPS','STCNTY','EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ','NOD_Rate','geometry']
 
         # get a filtered dataframe with the selected regions
         filtered_df_census = svi_od[selected_variables_tn_with_censusinfo]
@@ -361,47 +351,38 @@ for state in states:
         # get the unique counties
         unique_counties = svi_od['STCNTY'].unique()
 
-        # loop through the unique counties and get the number of rows for each county
+
+
+        # Process each county
         for county in unique_counties:
             print(f"County: {county}")
 
-            # create a temp_df with the selected county
+            # Create a temp_df with the selected county
             temp_census = filtered_df_census[filtered_df_census['STCNTY'] == county]
 
-            # filter the filtered_df_census dataframe to only include the selected census for each selected variable
-            # FIPS includes the census info
-            variable_1_selected_census = temp_census[temp_census['FIPS'].isin(selected_regions_variable_1)][['FIPS',selected_variables_tn[0],'geometry']]
-            variable_2_selected_census = temp_census[temp_census['FIPS'].isin(selected_regions_variable_2)][['FIPS',selected_variables_tn[1],'geometry']]
-            variable_3_selected_census = temp_census[temp_census['FIPS'].isin(selected_regions_variable_3)][['FIPS',selected_variables_tn[2],'geometry']]
-            variable_4_selected_census = temp_census[temp_census['FIPS'].isin(selected_regions_variable_4)][['FIPS',selected_variables_tn[3],'geometry']]
-            variable_5_selected_census = temp_census[temp_census['FIPS'].isin(selected_regions_variable_5)][['FIPS',selected_variables_tn[4],'geometry']]
+            # Initialize a dictionary to store the data for each variable
+            selected_coordinates_dic = {}
 
-            # create a new column in df that contains the x and y coordinates of the centroid of each polygon
-            variable_1_selected_census['coords'] = variable_1_selected_census['geometry'].apply(lambda x: x.representative_point().coords[:])
-            variable_1_selected_census['coords'] = [coords[0] for coords in variable_1_selected_census['coords']]
+            # Loop through each selected variable and process the data
+            for variable in selected_variables_for_state:
+                # Filter the temp_census dataframe for the selected regions for the current variable
+                selected_census = temp_census[temp_census['FIPS'].isin(selected_regions[variable])][['FIPS', variable, 'geometry']]
+                
+                # Create a new column with the coordinates of the centroid of each polygon
+                selected_census['coords'] = selected_census['geometry'].apply(lambda x: x.representative_point().coords[:])
+                selected_census['coords'] = [coords[0] for coords in selected_census['coords']]
+                
+                # Add the processed data to the dictionary
+                selected_coordinates_dic[variable] = selected_census
 
-            variable_2_selected_census['coords'] = variable_2_selected_census['geometry'].apply(lambda x: x.representative_point().coords[:])
-            variable_2_selected_census['coords'] = [coords[0] for coords in variable_2_selected_census['coords']]
-
-            variable_3_selected_census['coords'] = variable_3_selected_census['geometry'].apply(lambda x: x.representative_point().coords[:])
-            variable_3_selected_census['coords'] = [coords[0] for coords in variable_3_selected_census['coords']]
-
-            variable_4_selected_census['coords'] = variable_4_selected_census['geometry'].apply(lambda x: x.representative_point().coords[:])
-            variable_4_selected_census['coords'] = [coords[0] for coords in variable_4_selected_census['coords']]
-
-            variable_5_selected_census['coords'] = variable_5_selected_census['geometry'].apply(lambda x: x.representative_point().coords[:])
-            variable_5_selected_census['coords'] = [coords[0] for coords in variable_5_selected_census['coords']]
-
-
-            # create a dictionary with variable name as key and the data as value for all the selected regions
-            selected_coordinates_dic = {selected_variables_tn[0]: variable_1_selected_census, selected_variables_tn[1]: variable_2_selected_census, selected_variables_tn[2]: variable_3_selected_census, selected_variables_tn[3]: variable_4_selected_census, selected_variables_tn[4]: variable_5_selected_census}
-
-
-            # save the dictionary to a pickle file
-            # /Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)/{state}
-            with open(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)/{state}/selected_coordinates_dic_{county}.pkl', 'wb') as f:
+            # Save the dictionary to a pickle file
+            with open(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)- all variables/{state}/selected_coordinates_dic_{county}.pkl', 'wb') as f:
                 pickle.dump(selected_coordinates_dic, f)
-    
+        
+        print(f"Finished processing {state}")
+
     except Exception as e:
             print(f"Error processing {state}: {e}")
             continue  # Continue to the next iteration if an error occurs
+
+print('All states processed.')
