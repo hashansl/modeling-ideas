@@ -17,29 +17,47 @@ from torchvision.transforms import ToPILImage
 class data_loader_persistence_img(Dataset):
 
     def __init__(self,annotation_file_path,root_dir,transform=None):
-        pass
+        self.annotations = pd.read_csv(annotation_file_path)
+        self.root_dir = root_dir
+        self.transform = transform
+        self.class_names = sorted(self.annotations['percentile'].unique())
+        self.to_pil = ToPILImage()  # Initialize ToPILImage transform
+
+        print("Done Initializing")
 
     def __len__(self):
-        pass
+        return len(self.annotations)
 
     def __getitem__(self,index):
-        pass
+
+        npy_file_path = os.path.join(self.root_dir, str(self.annotations.iloc[index,0]) + '.npy')
+
+        img = np.load(npy_file_path)
+        # img = self.to_pil(img)
+
+        y_label = torch.tensor(int(self.annotations.iloc[index]['percentile']))
+
+        if self.transform:
+            img = self.transform(img)
+        return (img, y_label)
 
     def get_class_names(self):
-        pass
+        return self.class_names
 
 
 
 
-root_dir = "/Users/h6x/ORNL/git/persistence-image-classification/data/tennessee/2018/percentiles/below 90/h0h1/npy" # has 5 classes
-annotation_file_path = "/Users/h6x/ORNL/git/persistence-image-classification/data/usa/annotation 2018"
+root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 3 channels" # has 5 classes
+annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
 
-# dataset = data_loader_persistence_img(annotation_file_path=,root_dir=,transform=transforms.ToTensor())
+dataset = data_loader_persistence_img(annotation_file_path=annotation_file_path,root_dir=root_dir,transform=transforms.ToTensor())
 
-# print(len(dataset))
+print(len(dataset))
 
-# print(dataset[0][1])
-# print(dataset[0][0].shape)
+print(len(dataset[0]))
+
+print(dataset[0][1])
+print(dataset[0][0].shape)
 
 # train_set, test_set = torch.utils.data.random_split(dataset, [70, 25])
 
