@@ -23,8 +23,6 @@ class data_loader_persistence_img(Dataset):
         self.class_names = sorted(self.annotations['percentile'].unique())
         self.to_pil = ToPILImage()  # Initialize ToPILImage transform
 
-        print("Done Initializing")
-
     def __len__(self):
         return len(self.annotations)
 
@@ -32,7 +30,7 @@ class data_loader_persistence_img(Dataset):
 
         npy_file_path = os.path.join(self.root_dir, str(self.annotations.iloc[index,0]) + '.npy')
 
-        img = np.load(npy_file_path)
+        img = np.load(npy_file_path).astype(np.float32)
         # img = self.to_pil(img)
 
         y_label = torch.tensor(int(self.annotations.iloc[index]['percentile']))
@@ -47,7 +45,7 @@ class data_loader_persistence_img(Dataset):
 
 
 
-root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 3 channels" # has 5 classes
+root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy_combined_features" # has 5 classes
 annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
 
 dataset = data_loader_persistence_img(annotation_file_path=annotation_file_path,root_dir=root_dir,transform=transforms.ToTensor())
