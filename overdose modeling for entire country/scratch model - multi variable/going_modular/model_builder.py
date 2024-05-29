@@ -101,3 +101,4 @@ class TinyVGG(nn.Module):
         x = self.conv_block_2(x)
         x = self.classifier(x)
         return x
+    
