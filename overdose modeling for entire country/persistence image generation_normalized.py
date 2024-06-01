@@ -25,10 +25,16 @@ states = get_folders('/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for e
 
 variables = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ']
 
-for variable in variables:
-    # create a folder for each state if it does not exist
-    os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{variable}", exist_ok=True)
-print('Done creating folders for each variable')
+# create a dictonary where key is state and value is empty list
+min_values_state = {state: {} for state in states}
+max_values_state = {state: {} for state in states}
+
+
+
+# for variable in variables:
+#     # create a folder for each state if it does not exist
+#     os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{variable}", exist_ok=True)
+# print('Done creating folders for each variable')
 
 # print('Number of states:', len(states))
 # print(states)
@@ -57,6 +63,9 @@ for state in tqdm(states, desc="Processing states"):
                 else:
                     print("No number found in the string.")
         
+        min_values = {variable: float('inf') for variable in variables}
+        max_values = {variable: 0 for variable in variables}
+
 
         #################
         for fips, dictionary in data.items():
@@ -97,25 +106,50 @@ for state in tqdm(states, desc="Processing states"):
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
                         C_rotated = np.rot90(image_h1, k=1) 
 
-                        # plt.figure(figsize=(2.4, 2.4))
-                        # plt.imshow(C_rotated, cmap='viridis')  # Assuming 'viridis' colormap, change as needed
-                        # plt.axis('off')  # Turn off axis
-                        # # tennessee/results/persistence images/percentiles/below 75/png
-                        # plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Adjust subplot parameters to remove borders
-                        
-                        # plt.savefig(f'./results/persistence images/percentiles/below 90/h1/png/{key}/' + fips +'.png')
-                        # plt.show()
-                        # plt.close()
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                        # search for min and max values in the image
+                        min = np.min(C_rotated)
+                        max = np.max(C_rotated)
+
+                        if min < min_values[key]:
+                            min_values[key] = min
+                        if max > max_values[key]:
+                            max_values[key] = max
+
+ 
+                        # np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
                     else:
                         empty_image = np.zeros((310, 310))
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+                        # np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
                         # no_persitence_data_points.append(fips)
+                        min = np.min(empty_image)
+                        max = np.max(empty_image)
+              
+
+                        if min < min_values[key]:
+                            min_values[key] = min
+                        if max > max_values[key]:
+                            max_values[key] = max
                 else:
                     # no_data_points_to_compute_persistence_image.append(fips)
                     empty_image = np.zeros((310, 310))
-                    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+                    min = np.min(empty_image)
+                    max = np.max(empty_image)
+
+                    if min < min_values[key]:
+                        min_values[key] = min
+                    if max > max_values[key]:
+                        max_values[key] = max
+                    # np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+
+        
+        print('Max values: ',max_values)
+
+        # save the min and max values for each state
+        min_values_state[state] = min_values
+        max_values_state[state] = max_values
+    
         print('Done processing:', state)
+        # break
 
     except Exception as e:
         print(f"Error processing {state}: {e}")
