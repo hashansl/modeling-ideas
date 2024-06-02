@@ -75,8 +75,26 @@ for state in tqdm(states, desc="Processing states"):
                     dgms = rips.fit_transform(data_coordinates)
 
                     # seperate the diagrams H0 and H1
-                    # diagrams_h0 = dgms[0]
+                    diagrams_h0 = dgms[0]
                     diagrams_h1 = dgms[1]
+
+
+
+                    # if diagrams_h0 is not empty, get the max value
+                    if len(diagrams_h0) > 1: 
+
+                        # remove last data point in H0 diagram - it is infinity
+                        diagrams_h0_without_inf = diagrams_h0[0:-1]
+
+                        pimgr_0 = PersistenceImager(pixel_size=0.001)
+                        pimgr_0.fit(diagrams_h1)
+
+                        pimgr_0.pixel_size = 0.001
+                        pimgr_0.birth_range = (0.0, 0.31)
+                        pimgr_0.pers_range = (0.0, 0.31)
+
+                        pimgr_0.kernel_params = {'sigma': 0.00004}
+                        image_h0 = pimgr_0.transform(diagrams_h0_without_inf)
 
 
                     if len(diagrams_h1) > 0:
@@ -93,20 +111,20 @@ for state in tqdm(states, desc="Processing states"):
 
                     # saving the plot
 
-                    if len(diagrams_h1) > 0:
+                    if len(diagrams_h0) > 1 & len(diagrams_h1) > 0:
+                        C_rotated = np.rot90(image_h0+image_h1, k=1) 
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                    
+                    elif len(diagrams_h0) > 1 & len(diagrams_h1) == 0:
+                        # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
+                        C_rotated = np.rot90(image_h0, k=1) 
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                    
+                    elif len(diagrams_h0) < 1 & len(diagrams_h1) > 0:
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
                         C_rotated = np.rot90(image_h1, k=1) 
-
-                        # plt.figure(figsize=(2.4, 2.4))
-                        # plt.imshow(C_rotated, cmap='viridis')  # Assuming 'viridis' colormap, change as needed
-                        # plt.axis('off')  # Turn off axis
-                        # # tennessee/results/persistence images/percentiles/below 75/png
-                        # plt.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Adjust subplot parameters to remove borders
-                        
-                        # plt.savefig(f'./results/persistence images/percentiles/below 90/h1/png/{key}/' + fips +'.png')
-                        # plt.show()
-                        # plt.close()
                         np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                    
                     else:
                         empty_image = np.zeros((310, 310))
                         np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
