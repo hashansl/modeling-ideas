@@ -1,86 +1,80 @@
 # import libraries
 import numpy as np
 import re
-import matplotlib.pyplot as plt
 import os
-
-from ripser import Rips
-from persim import PersistenceImager
-
 import glob
 import pickle
-import geopandas as gpd
 from tqdm import tqdm
+from ripser import Rips
+from persim import PersistenceImager
 
 
 # remove warnings
 import warnings
 warnings.filterwarnings("ignore")
 
-# get the list of folders in a location
+# Function to get the list of folders in a specified location
 def get_folders(location):
     return [name for name in os.listdir(location) if os.path.isdir(os.path.join(location, name))]
 
+# Get the list of state folders
 states = get_folders('/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)- all variables')
 
+# List of variables to be processed
 variables = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','EP_AGE17','EP_DISABL','EP_SNGPNT','EP_LIMENG','EP_MINRTY','EP_MUNIT','EP_MOBILE','EP_CROWD','EP_NOVEH','EP_GROUPQ']
 
+# Create a folder for each variable if it does not exist
 for variable in variables:
-    # create a folder for each state if it does not exist
     os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{variable}", exist_ok=True)
 print('Done creating folders for each variable')
 
-# print('Number of states:', len(states))
-# print(states)
 
 # loop through each state
 for state in tqdm(states, desc="Processing states"):
     print('Processing:', state)
 
     try:
-        # load the dictonary into a dictionary from the pkl files
+        # Load data from pickle files into a dictionary
         data = {}
 
         for file in glob.glob(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/selected coordinates for each state - percentiles(below 90th)- all variables/{state}/*.pkl"):
             with open(file, 'rb') as f:
                 
-                # select last 20 characters of the file name
+                # Extract the last 20 characters of the file name
                 extracted_words = file[-20:]
 
                 match = re.search(r'(\d+)', extracted_words)
                 if match:
                     extracted_number = match.group(1)
-                    # print(extracted_number)
-                    # print(type(extracted_number))
-
+                    # Load the pickle file data into the dictionary
                     data[extracted_number] = pickle.load(f)
                 else:
                     print("No number found in the string.")
         
 
-        #################
+        # Process each county (FIPS) in the data
         for fips, dictionary in data.items():
-            # data is a dictionary where the key is the county code and the value is a another dictionary
+            # Dictionary where the key is the county code (FIPS) and the value is another dictionary
     
             for key, value in dictionary.items():
+                # Key is the variable name and value is a dataframe with the selected coordinates of the county
 
-                # if the value is not empty, append it to the list
+                # If the value is not empty, process it
                 if len(value)> 0:
 
-                    # get the coordinates into a numpy array
+                    # Convert coordinates to a numpy array
                     data_coordinates = np.array([np.array(coord) for coord in value['coords']])
 
-                    # creating the persistence diagram from rips class
+                    # Create persistence diagram using Rips class
                     rips = Rips(maxdim=1, coeff=2)
                     dgms = rips.fit_transform(data_coordinates)
 
-                    # seperate the diagrams H0 and H1
+                    # Seperate the diagrams H0 and H1
                     diagrams_h0 = dgms[0]
                     diagrams_h1 = dgms[1]
 
 
-
-                    # if diagrams_h0 is not empty, get the max value
+                    # If H0 diagram is not empty, process it
                     if len(diagrams_h0) > 1: 
 
                         # remove last data point in H0 diagram - it is infinity
@@ -96,7 +90,7 @@ for state in tqdm(states, desc="Processing states"):
                         pimgr_0.kernel_params = {'sigma': 0.00004}
                         image_h0 = pimgr_0.transform(diagrams_h0_without_inf)
 
-
+                    # If H1 diagram is not empty, process it
                     if len(diagrams_h1) > 0:
 
                         pimgr_1 = PersistenceImager(pixel_size=0.001)
@@ -109,30 +103,28 @@ for state in tqdm(states, desc="Processing states"):
                         pimgr_1.kernel_params = {'sigma': 0.00004}
                         image_h1 = pimgr_1.transform(diagrams_h1)
 
-                    # saving the plot
-
+                    # Save the persistence image as a numpy file
                     if len(diagrams_h0) > 1 & len(diagrams_h1) > 0:
-                        C_rotated = np.rot90(image_h0+image_h1, k=1) 
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                        peristence_image = np.rot90(image_h0+image_h1, k=1) 
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
                     
                     elif len(diagrams_h0) > 1 & len(diagrams_h1) == 0:
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
-                        C_rotated = np.rot90(image_h0, k=1) 
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                        peristence_image = np.rot90(image_h0, k=1) 
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
                     
                     elif len(diagrams_h0) < 1 & len(diagrams_h1) > 0:
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
-                        C_rotated = np.rot90(image_h1, k=1) 
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, C_rotated)
+                        peristence_image = np.rot90(image_h1, k=1) 
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
                     
                     else:
-                        empty_image = np.zeros((310, 310))
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
-                        # no_persitence_data_points.append(fips)
+                        peristence_image = np.zeros((310, 310))
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
                 else:
-                    # no_data_points_to_compute_persistence_image.append(fips)
-                    empty_image = np.zeros((310, 310))
-                    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, empty_image)
+                    # If there is no data to compute persistence image, save an empty image
+                    peristence_image = np.zeros((310, 310))
+                    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
         print('Done processing:', state)
 
     except Exception as e:
