@@ -7,6 +7,8 @@ import pickle
 from tqdm import tqdm
 from ripser import Rips
 from persim import PersistenceImager
+import traceback
+
 
 
 # remove warnings
@@ -25,7 +27,7 @@ variables = ['EP_POV','EP_UNEMP','EP_PCI','EP_NOHSDP','EP_UNINSUR','EP_AGE65','E
 
 # Create a folder for each variable if it does not exist
 for variable in variables:
-    os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{variable}", exist_ok=True)
+    os.makedirs(f"/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1h0/npy 16 channels/{variable}", exist_ok=True)
 print('Done creating folders for each variable')
 
 
@@ -81,7 +83,7 @@ for state in tqdm(states, desc="Processing states"):
                         diagrams_h0_without_inf = diagrams_h0[0:-1]
 
                         pimgr_0 = PersistenceImager(pixel_size=0.001)
-                        pimgr_0.fit(diagrams_h1)
+                        pimgr_0.fit(diagrams_h0_without_inf)
 
                         pimgr_0.pixel_size = 0.001
                         pimgr_0.birth_range = (0.0, 0.31)
@@ -106,29 +108,30 @@ for state in tqdm(states, desc="Processing states"):
                     # Save the persistence image as a numpy file
                     if len(diagrams_h0) > 1 & len(diagrams_h1) > 0:
                         peristence_image = np.rot90(image_h0+image_h1, k=1) 
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1h0/npy 16 channels/{key}/' + fips, peristence_image)
                     
                     elif len(diagrams_h0) > 1 & len(diagrams_h1) == 0:
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
                         peristence_image = np.rot90(image_h0, k=1) 
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1h0/npy 16 channels/{key}/' + fips, peristence_image)
                     
                     elif len(diagrams_h0) < 1 & len(diagrams_h1) > 0:
                         # Rotate 90 degrees to the left(k=3), 90 degrees to the right(k=1), 180 degrees(k=2)
                         peristence_image = np.rot90(image_h1, k=1) 
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1h0/npy 16 channels/{key}/' + fips, peristence_image)
                     
                     else:
                         peristence_image = np.zeros((310, 310))
-                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
+                        np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1h0/npy 16 channels/{key}/' + fips, peristence_image)
                 else:
                     # If there is no data to compute persistence image, save an empty image
                     peristence_image = np.zeros((310, 310))
-                    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 16 channels/{key}/' + fips, peristence_image)
+                    np.save(f'/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1h0/npy 16 channels/{key}/' + fips, peristence_image)
         print('Done processing:', state)
 
     except Exception as e:
         print(f"Error processing {state}: {e}")
+        traceback.print_exc()
         continue  # Continue to the next iteration if an error occurs
 
 print('All states processed.')
