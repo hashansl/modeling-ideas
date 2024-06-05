@@ -3,6 +3,7 @@ Contains PyTorch model code to instantiate SE-ResNet and SE-ResNext.
 """
 import torch
 from torch import nn 
+import torchinfo
 
 # ConvBlock
 class ConvBlock(nn.Module):
@@ -111,8 +112,8 @@ class SEResNet(nn.Module):
     def __init__(
         self, 
         config_name : int, 
-        in_channels : int = 3, 
-        classes : int = 1000,
+        in_channels : int = 16, # intial number of channels is 3 
+        classes : int = 5,
         r : int = 16
         ):
         super().__init__()
@@ -126,13 +127,13 @@ class SEResNet(nn.Module):
         no_blocks = configurations[config_name]
 
         out_features = [256, 512, 1024, 2048]
-        self.blocks = nn.ModuleList([ResNetBlock(64, 256, 1, True, r=r)])
+        self.blocks = nn.ModuleList([ResNetBlock(64, 256,r=r,first=True)])
 
         for i in range(len(out_features)):
             if i > 0:
-                self.blocks.append(ResNetBlock(out_features[i-1], out_features[i], 2, r=r))
+                self.blocks.append(ResNetBlock(out_features[i-1], out_features[i], r=r))
             for _ in range(no_blocks[i]-1):
-                self.blocks.append(ResNetBlock(out_features[i], out_features[i], 1, r=r))
+                self.blocks.append(ResNetBlock(out_features[i], out_features[i], r=r))
         
         self.conv1 = ConvBlock(in_channels, 64, 7, 2, 3)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -164,8 +165,8 @@ class SEResNeXt(nn.Module):
     def __init__(
         self, 
         config_name : int, 
-        in_channels : int = 3, 
-        classes : int = 1000,
+        in_channels : int = 16, 
+        classes : int = 5,
         C : int = 32, # cardinality
         r : int = 16
         ):
@@ -180,13 +181,13 @@ class SEResNeXt(nn.Module):
         no_blocks = configurations[config_name]
 
         out_features = [256, 512, 1024, 2048]
-        self.blocks = nn.ModuleList([ResNeXtBlock(64, 256, 1, True, cardinatlity=C, r=r)])
+        self.blocks = nn.ModuleList([ResNeXtBlock(64, 256, 1, r=r , first=True, cardinatlity=C)])
 
         for i in range(len(out_features)):
             if i > 0:
-                self.blocks.append(ResNeXtBlock(out_features[i-1], out_features[i], 2, cardinatlity=C, r=r))
+                self.blocks.append(ResNeXtBlock(out_features[i-1], out_features[i], 2, r=r, cardinatlity=C))
             for _ in range(no_blocks[i]-1):
-                self.blocks.append(ResNeXtBlock(out_features[i], out_features[i], 1, cardinatlity=C, r=r))
+                self.blocks.append(ResNeXtBlock(out_features[i], out_features[i], 1, r=r, cardinatlity=C))
         
         self.conv1 = ConvBlock(in_channels, 64, 7, 2, 3)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -216,8 +217,16 @@ class SEResNeXt(nn.Module):
 if __name__ == "__main__":
     config_name = 50
     se_resnext = SEResNeXt(config_name)
-    image = torch.rand(1, 3, 224, 224)
+    image = torch.rand(8, 16, 224, 224)
     print(se_resnext(image).shape)
 
-    se_resnet = SEResNet(config_name)
-    print(se_resnet(image).shape)
+    # se_resnet = SEResNet(config_name)
+    # print(se_resnet(image).shape)
+
+    # Print a summary using torchinfo 
+    torchinfo.summary(model=se_resnext, 
+                      input_data=image, 
+                      col_names=["input_size", "output_size", "num_params", "kernel_size", "mult_adds"],
+                      col_width=16)
+
+    
