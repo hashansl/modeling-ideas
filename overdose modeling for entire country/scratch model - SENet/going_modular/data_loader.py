@@ -45,17 +45,17 @@ class data_loader_persistence_img(Dataset):
 
 
 
-root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy_combined_features" # has 5 classes
-annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
+# root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy_combined_features" # has 5 classes
+# annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
 
-dataset = data_loader_persistence_img(annotation_file_path=annotation_file_path,root_dir=root_dir,transform=transforms.ToTensor())
+# dataset = data_loader_persistence_img(annotation_file_path=annotation_file_path,root_dir=root_dir,transform=transforms.ToTensor())
 
-print(len(dataset))
+# print(len(dataset))
 
-print(len(dataset[0]))
+# print(len(dataset[0]))
 
-print(dataset[0][1])
-print(dataset[0][0].shape)
+# print(dataset[0][1])
+# print(dataset[0][0].shape)
 
 # train_set, test_set = torch.utils.data.random_split(dataset, [70, 25])
 
