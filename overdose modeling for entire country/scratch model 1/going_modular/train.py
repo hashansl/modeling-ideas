@@ -4,20 +4,19 @@ Trains a PyTorch image classification model using device-agnostic code.
 
 import os
 import torch
-import data_setup, engine, model_builder, utils,loss_and_accuracy_curve_plotter
+import data_setup, engine, model_builder, utils,loss_and_accuracy_curve_plotter,testing, get_lr
 
 
 from torchvision import transforms
 from timeit import default_timer as timer 
 
 # Setup hyperparameters
-NUM_EPOCHS = 50
-BATCH_SIZE = 64
-HIDDEN_UNITS = 512
-LEARNING_RATE = 0.000001
+NUM_EPOCHS = 30
+BATCH_SIZE = 8
+HIDDEN_UNITS = 20
+LEARNING_RATE = 1e-3
 
 
-#going modular/data/pizza_steak_sushi/train
 # Setup directories
 root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy 3 channels"
 annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
@@ -32,7 +31,7 @@ data_transform = transforms.Compose([
 ])
 
 # Create DataLoaders with help from data_setup.py
-train_dataloader, test_dataloader, class_names = data_setup.create_dataloaders(
+train_dataloader, validation_dataloader, test_dataloader, class_names = data_setup.create_dataloaders(
     annotation_file_path=annotation_file_path,
     root_dir=root_dir,
     transform=data_transform,
@@ -56,11 +55,14 @@ start_time = timer()
 # Start training with help from engine.py
 results = engine.train(model=model,
              train_dataloader=train_dataloader,
-             test_dataloader=test_dataloader,
+             validation_dataloader=validation_dataloader,
              loss_fn=loss_fn,
              optimizer=optimizer,
              epochs=NUM_EPOCHS,
-             device=device)
+             device=device,
+             use_mixed_precision=True,
+             save_name="tinyvgg_model.pth",
+             save_path="/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/models/")
 
 # End the timer and print out how long it took
 end_time = timer()
@@ -69,7 +71,16 @@ print(f"Total training time: {end_time-start_time:.3f} seconds")
 #plotting the results
 loss_and_accuracy_curve_plotter.plot_loss_curves(results)
 
-# Save the model with help from utils.py
-# utils.save_model(model=model,
-#                  target_dir="/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/models",
-#                  model_name="05_going_modular_script_mode_tinyvgg_model.pth")
+# Test the model after training
+test_loss, test_acc = testing.test_step(model=model,
+                                  dataloader=test_dataloader,
+                                  loss_fn=loss_fn,
+                                  device=device,
+                                  use_mixed_precision=True)
+
+# Print out test results
+print(
+    f"Test results | "
+    f"test_loss: {test_loss:.4f} | "
+    f"test_acc: {test_acc:.4f}"
+)
