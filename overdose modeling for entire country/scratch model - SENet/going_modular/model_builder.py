@@ -214,19 +214,19 @@ class SEResNeXt(nn.Module):
             if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
                 nn.init.kaiming_normal_(layer.weight)
 
-if __name__ == "__main__":
-    config_name = 50
-    se_resnext = SEResNeXt(config_name)
-    image = torch.rand(8, 16, 224, 224)
-    print(se_resnext(image).shape)
+# if __name__ == "__main__":
+#     config_name = 50
+#     # se_resnext = SEResNeXt(config_name)
+#     image = torch.rand(8, 16, 224, 224)
+#     # print(se_resnext(image).shape)
 
-    # se_resnet = SEResNet(config_name)
-    # print(se_resnet(image).shape)
+#     se_resnet = SEResNet(config_name)
+#     # print(se_resnet(image).shape)
 
-    # Print a summary using torchinfo 
-    torchinfo.summary(model=se_resnext, 
-                      input_data=image, 
-                      col_names=["input_size", "output_size", "num_params", "kernel_size", "mult_adds"],
-                      col_width=16)
+#     # Print a summary using torchinfo 
+#     torchinfo.summary(model=se_resnet, 
+#                       input_data=image, 
+#                       col_names=["input_size", "output_size", "num_params", "kernel_size", "mult_adds"],
+#                       col_width=16)
 
     
