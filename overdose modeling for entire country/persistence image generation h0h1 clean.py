@@ -93,17 +93,19 @@ for state in tqdm(states, desc="Processing states"):
                         pimgr_0.pixel_size = PERSISTENCE_IMAGE_PARAMS['pixel_size']
                         pimgr_0.birth_range = PERSISTENCE_IMAGE_PARAMS['birth_range']
                         pimgr_0.pers_range = PERSISTENCE_IMAGE_PARAMS['pers_range']
+                        pimgr_0.kernel_params = PERSISTENCE_IMAGE_PARAMS['kernel_params']
 
                         image_h0 = pimgr_0.transform(diagrams_h0_without_inf)
 
                     # If H1 diagram is not empty, process it
                     if len(diagrams_h1) > 0:
-                        pimgr_1 = PersistenceImager(**PERSISTENCE_IMAGE_PARAMS)
+                        pimgr_1 = PersistenceImager(pixel_size = PERSISTENCE_IMAGE_PARAMS['pixel_size'])
                         pimgr_1.fit(diagrams_h1)
 
                         pimgr_1.pixel_size = PERSISTENCE_IMAGE_PARAMS['pixel_size']
                         pimgr_1.birth_range = PERSISTENCE_IMAGE_PARAMS['birth_range']
                         pimgr_1.pers_range = PERSISTENCE_IMAGE_PARAMS['pers_range']
+                        pimgr_1.kernel_params = PERSISTENCE_IMAGE_PARAMS['kernel_params']
 
                         image_h1 = pimgr_1.transform(diagrams_h1)
 
