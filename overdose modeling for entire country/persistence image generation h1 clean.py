@@ -84,7 +84,7 @@ for state in tqdm(states, desc="Processing states"):
 
                     # If H1 diagram is not empty, process it
                     if len(diagrams_h1) > 0:
-                        pimgr_1 = PersistenceImager(**PERSISTENCE_IMAGE_PARAMS)
+                        pimgr_1 = PersistenceImager(PERSISTENCE_IMAGE_PARAMS['pixel_size'])
                         pimgr_1.fit(diagrams_h1)
 
                         pimgr_1.pixel_size = PERSISTENCE_IMAGE_PARAMS['pixel_size']
