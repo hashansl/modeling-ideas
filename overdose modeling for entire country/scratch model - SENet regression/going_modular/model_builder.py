@@ -107,13 +107,13 @@ class ResNeXtBlock(nn.Module):
         return h
 
 
-# SE-ResNeXt
+# SE-ResNet
 class SEResNet(nn.Module):
     def __init__(
         self, 
         config_name : int, 
         in_channels : int = 16, # intial number of channels is 3 
-        classes : int = 5,
+        num_outputs : int = 1,
         r : int = 16
         ):
         super().__init__()
@@ -138,7 +138,8 @@ class SEResNet(nn.Module):
         self.conv1 = ConvBlock(in_channels, 64, 7, 2, 3)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc = nn.Linear(2048, classes)
+        # self.fc = nn.Linear(2048, classes)
+        self.fc = nn.Linear(2048, num_outputs)
 
         self.relu = nn.ReLU()
 
@@ -166,7 +167,7 @@ class SEResNeXt(nn.Module):
         self, 
         config_name : int, 
         in_channels : int = 16, 
-        classes : int = 5,
+        num_outputs : int = 1,
         C : int = 32, # cardinality
         r : int = 16
         ):
@@ -192,7 +193,8 @@ class SEResNeXt(nn.Module):
         self.conv1 = ConvBlock(in_channels, 64, 7, 2, 3)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc = nn.Linear(2048, classes)
+        # self.fc = nn.Linear(2048, classes)
+        self.fc = nn.Linear(2048, num_outputs)
 
         self.relu = nn.ReLU()
 

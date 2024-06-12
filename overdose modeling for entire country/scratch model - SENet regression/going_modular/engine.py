@@ -47,7 +47,7 @@ def train_step(model: torch.nn.Module,
 # produces consistent predictions.
 
   # Setup train loss and train accuracy values
-  train_loss, train_acc = 0, 0
+  train_loss = 0
 
   # Initialize GradScaler for mixed precision
   scaler = torch.cuda.amp.GradScaler(enabled=use_mixed_precision)
@@ -75,14 +75,10 @@ def train_step(model: torch.nn.Module,
         scaler.step(optimizer)
         scaler.update()
 
-        # Calculate and accumulate accuracy metric across all batches
-        y_pred_class = torch.argmax(torch.softmax(y_pred, dim=1), dim=1)
-        train_acc += (y_pred_class == y).sum().item()/len(y_pred)
 
   # Adjust metrics to get average loss and accuracy per batch 
   train_loss = train_loss / len(dataloader)
-  train_acc = train_acc / len(dataloader)
-  return train_loss, train_acc
+  return train_loss
 
 def validation_step(model: torch.nn.Module, 
               dataloader: torch.utils.data.DataLoader, 
@@ -110,7 +106,7 @@ def validation_step(model: torch.nn.Module,
   model.eval() 
 
   # Setup validation loss and validation accuracy values
-  validation_loss, validation_acc = 0, 0
+  validation_loss = 0
   
 
   # Turn on inference context manager
@@ -128,14 +124,10 @@ def validation_step(model: torch.nn.Module,
             loss = loss_fn(validation_pred_logits, y)
             validation_loss += loss.detach().cpu().item()
 
-            # Calculate and accumulate accuracy
-            validation_pred_labels = validation_pred_logits.argmax(dim=1)
-            validation_acc += ((validation_pred_labels == y).sum().item()/len(validation_pred_labels))
 
   # Adjust metrics to get average loss and accuracy per batch 
   validation_loss = validation_loss / len(dataloader)
-  validation_acc = validation_acc / len(dataloader)
-  return validation_loss, validation_acc
+  return validation_loss
 
 def train(model: torch.nn.Module, 
           train_dataloader: torch.utils.data.DataLoader, 
@@ -180,9 +172,7 @@ def train(model: torch.nn.Module,
   """
   # Create empty results dictionary
   results = {"train_loss": [],
-      "train_acc": [],
-      "validation_loss": [],
-      "validation_acc": []
+      "validation_loss": []
   }
 
   # Initialize patience counter
@@ -193,13 +183,13 @@ def train(model: torch.nn.Module,
 
   # Loop through training and validationing steps for a number of epochs
   for epoch in tqdm(range(epochs)):
-      train_loss, train_acc = train_step(model=model,
+      train_loss = train_step(model=model,
                                           dataloader=train_dataloader,
                                           loss_fn=loss_fn,
                                           optimizer=optimizer,
                                           device=device
                                           ,use_mixed_precision=use_mixed_precision)
-      validation_loss, validation_acc = validation_step(model=model,
+      validation_loss = validation_step(model=model,
           dataloader=validation_dataloader,
           loss_fn=loss_fn,
           device=device,
@@ -209,16 +199,12 @@ def train(model: torch.nn.Module,
       print(
           f"Epoch: {epoch+1} | "
           f"train_loss: {train_loss:.4f} | "
-          f"train_acc: {train_acc:.4f} | "
           f"validation_loss: {validation_loss:.4f} | "
-          f"validation_acc: {validation_acc:.4f}"
       )
 
       # Update results dictionary
       results["train_loss"].append(train_loss)
-      results["train_acc"].append(train_acc)
       results["validation_loss"].append(validation_loss)
-      results["validation_acc"].append(validation_acc)
 
       # Check for the best validation loss
       if epoch == 1:

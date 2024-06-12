@@ -28,12 +28,12 @@ class data_loader_persistence_img(Dataset):
 
     def __getitem__(self,index):
 
-        npy_file_path = os.path.join(self.root_dir, str(self.annotations.iloc[index,0]) + '.npy')
+        npy_file_path = os.path.join(self.root_dir, str(int(self.annotations.iloc[index,0])) + '.npy')
 
         img = np.load(npy_file_path).astype(np.float32)
         # img = self.to_pil(img)
 
-        y_label = torch.tensor(int(self.annotations.iloc[index]['percentile']))
+        y_label = torch.tensor(self.annotations.iloc[index]['NOD'])
 
         if self.transform:
             img = self.transform(img)
