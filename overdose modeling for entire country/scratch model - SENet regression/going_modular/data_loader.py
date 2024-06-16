@@ -17,7 +17,8 @@ from torchvision.transforms import ToPILImage
 class data_loader_persistence_img(Dataset):
 
     def __init__(self,annotation_file_path,root_dir,transform=None):
-        self.annotations = pd.read_csv(annotation_file_path)
+        self.dtype = {'STCNTY': str}
+        self.annotations = pd.read_csv(annotation_file_path,dtype=self.dtype)
         self.root_dir = root_dir
         self.transform = transform
         self.class_names = sorted(self.annotations['percentile'].unique())
@@ -28,12 +29,12 @@ class data_loader_persistence_img(Dataset):
 
     def __getitem__(self,index):
 
-        npy_file_path = os.path.join(self.root_dir, str(int(self.annotations.iloc[index,0])) + '.npy')
+        npy_file_path = os.path.join(self.root_dir, str(self.annotations.iloc[index,0]) + '.npy')
 
         img = np.load(npy_file_path).astype(np.float32)
         # img = self.to_pil(img)
 
-        y_label = torch.tensor(self.annotations.iloc[index]['NOD'])
+        y_label = torch.tensor((self.annotations.iloc[index]['NOD']).astype(np.float32))
 
         if self.transform:
             img = self.transform(img)

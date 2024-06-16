@@ -14,7 +14,7 @@ def train_step(model: torch.nn.Module,
                loss_fn: torch.nn.Module, 
                optimizer: torch.optim.Optimizer,
                device: torch.device,
-               use_mixed_precision: bool = False) -> Tuple[float, float]:
+               use_mixed_precision: bool = False) -> Tuple[float]:
   """Trains a PyTorch model for a single epoch.
 
   Turns a target PyTorch model to training mode and then
@@ -58,6 +58,9 @@ def train_step(model: torch.nn.Module,
         # Send data to target device
         X, y = X.to(device), y.to(device)
 
+        # Reshape target tensor to match model output shape
+        y = y.view(-1, 1)
+
         # 1. Forward pass
         y_pred = model(X)
 
@@ -84,7 +87,7 @@ def validation_step(model: torch.nn.Module,
               dataloader: torch.utils.data.DataLoader, 
               loss_fn: torch.nn.Module,
               device: torch.device,
-              use_mixed_precision: bool = False) -> Tuple[float, float]:
+              use_mixed_precision: bool = False) -> Tuple[float]:
   """validations a PyTorch model for a single epoch.
 
   Turns a target PyTorch model to "eval" mode and then performs
@@ -116,6 +119,9 @@ def validation_step(model: torch.nn.Module,
         for batch, (X, y) in enumerate(dataloader):
             # Send data to target device
             X, y = X.to(device), y.to(device)
+
+            # Reshape target tensor to match model output shape
+            y = y.view(-1, 1)
 
             # 1. Forward pass
             validation_pred_logits = model(X)
@@ -198,9 +204,8 @@ def train(model: torch.nn.Module,
       # Print out what's happening
       print(
           f"Epoch: {epoch+1} | "
-          f"train_loss: {train_loss:.4f} | "
-          # f"train_acc: {train_acc:.4f} | "
-          f"validation_loss: {validation_loss:.4f} | "
+          f"train_MSE: {train_loss} | "
+          f"validation_MSE: {validation_loss} | "
       )
 
       # Update results dictionary
@@ -231,19 +236,19 @@ def train(model: torch.nn.Module,
               },(save_path+save_name))
               print("Model saved!")
               patience_ctr = 0  # Reset patience counter if the model improves
-          else:
-              patience_ctr += 1
-              if patience_ctr >= 5:
-                  print(f"Stopping criterion reached: validation loss has not improved in {patience_ctr} epochs")
-                  print(f"saving to {save_path+save_name}", flush=True)
+          # else:
+          #     patience_ctr += 1
+          #     if patience_ctr >= 5:
+          #         print(f"Stopping criterion reached: validation loss has not improved in {patience_ctr} epochs")
+          #         print(f"saving to {save_path+save_name}", flush=True)
 
-                  # loading weights of best model
-                  checkpoint = torch.load(save_path+save_name)
-                  model.load_state_dict(checkpoint["model_state_dict"])
+          #         # loading weights of best model
+          #         checkpoint = torch.load(save_path+save_name)
+          #         model.load_state_dict(checkpoint["model_state_dict"])
 
-                  with open(save_path+str(best_loss), "wb") as f_out:
-                    pickle.dump(results, f_out, pickle.HIGHEST_PROTOCOL)
-                  break
+          #         with open(save_path+str(best_loss), "wb") as f_out:
+          #           pickle.dump(results, f_out, pickle.HIGHEST_PROTOCOL)
+          #         break
   if epoch+1 == epochs:
     print("Model training hit max epochs, not converged")
 
@@ -254,5 +259,5 @@ def train(model: torch.nn.Module,
     with open(save_path+str(best_loss), "wb") as f_out:
       pickle.dump(results, f_out, pickle.HIGHEST_PROTOCOL)
 
-  # Return the filled results at the end of the epochs
+  #Return the filled results at the end of the epochs
   return results

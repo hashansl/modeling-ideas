@@ -7,11 +7,12 @@ import torch
 import data_setup, engine, model_builder, utils,loss_and_accuracy_curve_plotter,testing
 from torchvision import transforms
 from timeit import default_timer as timer 
+import numpy as np
 
 # Setup hyperparameters
-NUM_EPOCHS = 5
-BATCH_SIZE = 1
-LEARNING_RATE = 1e-3
+NUM_EPOCHS = 100
+BATCH_SIZE = 64
+LEARNING_RATE = 1e-2
 CONFIG_NAME = 50
 
 
@@ -19,6 +20,7 @@ CONFIG_NAME = 50
 # Setup directories
 root_dir = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/results/persistence images/below 90th percentile/h1/npy_combined_features" # has 5 classes
 annotation_file_path = "/Users/h6x/ORNL/git/modeling-ideas/overdose modeling for entire country/data/processed data/svi with hepvu/2018/annotation 2018/annotation.csv"
+
 
 
 # Setup target device
@@ -65,7 +67,7 @@ results = engine.train(model=model,
              device=device,
              use_mixed_precision=True,
              save_name="se_restnet.pth",
-             save_path="/Users/h6x/ORNL/git/persistence-image-classification/scratch model 1/models/")
+             save_path="/home/h6x/Projects/overdose_modeling/SEResNet_regression/models/")
 
 # End the timer and print out how long it took
 end_time = timer()
@@ -76,20 +78,28 @@ print(f"Total training time: {(end_time-start_time)/60:.3f} minutes")
 loss_and_accuracy_curve_plotter.plot_loss_curves(results)
 
 # Test the model after training
-test_loss, test_acc = testing.test_step(model=model,
+test_loss = testing.test_step(model=model,
                                   dataloader=test_dataloader,
                                   loss_fn=loss_fn,
                                   device=device,
                                   use_mixed_precision=True)
 
 # Print out test results
+# print(
+#     f"Test results | "
+#     f"test_loss: {test_loss} | "
+# )
+
 print(
     f"Test results | "
-    f"test_loss: {test_loss:.4f} | "
-    f"test_acc: {test_acc:.4f}"
+    f"MSE: {test_loss} | "
+    f"RMSE: {np.sqrt(test_loss)} | "
 )
+
 
 # # Update results dictionary with test results
 # results["test_loss"].append(test_loss)
 # results["test_acc"].append(test_acc)
+
+
 
