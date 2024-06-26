@@ -69,6 +69,9 @@ for state in tqdm(states, desc="Processing states"):
             for key, value in dictionary.items():
 
                 # If the value is not empty, process it
+
+                # Save the persistence image
+                save_path = os.path.join(RESULTS_DIR, key, fips)
                 if len(value) > 0:
 
                     # Convert coordinates to a numpy array
@@ -81,6 +84,7 @@ for state in tqdm(states, desc="Processing states"):
                     # Separate the diagrams for H0 and H1
                     diagrams_h0 = dgms[0]
                     diagrams_h1 = dgms[1]
+                    
 
                     # If H0 diagram is not empty, process it
                     if len(diagrams_h0) > 1: 
@@ -109,8 +113,7 @@ for state in tqdm(states, desc="Processing states"):
 
                         image_h1 = pimgr_1.transform(diagrams_h1)
 
-                    # Save the persistence image
-                    save_path = os.path.join(RESULTS_DIR, key, fips)
+                    
 
                     if len(diagrams_h0) > 1 and len(diagrams_h1) > 0:
                         peristence_image = np.rot90(image_h0 + image_h1, k=1) 

@@ -68,6 +68,9 @@ for state in tqdm(states, desc="Processing states"):
     
             for key, value in dictionary.items():
 
+                # Save the persistence image
+                save_path = os.path.join(RESULTS_DIR, key, fips)
+
                 # If the value is not empty, process it
                 if len(value) > 0:
 
@@ -94,8 +97,7 @@ for state in tqdm(states, desc="Processing states"):
 
                         image_h1 = pimgr_1.transform(diagrams_h1)
 
-                    # Save the persistence image
-                    save_path = os.path.join(RESULTS_DIR, key, fips)
+                    
 
                     if len(diagrams_h1) > 0:
                         peristence_image = np.rot90(image_h1, k=1) 
