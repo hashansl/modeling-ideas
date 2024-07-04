@@ -106,5 +106,3 @@ for state in states:
 
 
 
-
-    
